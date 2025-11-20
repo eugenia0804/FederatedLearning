@@ -36,13 +36,13 @@ The project is organized as follows:
 ### Training Parameters
 
 The dafault training are set at follows:
-    ```python
-    num_rounds = 800 # Numbers of communication rounds
-    batch_size = 64 # Number of training samples processed before the model is updated
-    lr = 5e-3 # Model Learning Rate
-    c = 0.1 # Percentage of client to preform local updates in each round
-    local_epoch = 10 # The number of epochs for one client update
-    ```
+```python
+num_rounds = 800 # Numbers of communication rounds
+batch_size = 64 # Number of training samples processed before the model is updated
+lr = 5e-3 # Model Learning Rate
+c = 0.1 # Percentage of client to preform local updates in each round
+local_epoch = 10 # The number of epochs for one client update 
+```
 
 ### Data Visualization
 
