@@ -46,6 +46,8 @@ def main(num_rounds, c, local_epochs, batch_size, lr, device='cuda:0', parallel=
 
     train_acc_list = []
     val_acc_list = []
+    train_loss_list = []
+    val_loss_list = []
 
     for r in range(1, num_rounds+1):
         # Sample clients for this round
@@ -93,7 +95,9 @@ def main(num_rounds, c, local_epochs, batch_size, lr, device='cuda:0', parallel=
                 if avg_loss is not None:
                     total_loss += avg_loss * n  # accumulate sum(loss*count)
             val_acc = total_correct / total_samples if total_samples > 0 else 0.0
+            val_loss = total_loss / total_samples if total_samples > 0 else 0.0
             val_acc_list.append(val_acc)
+            val_loss_list.append(val_loss)
 
             # Evaluate on training (all client train sets)
             total_correct = 0
@@ -107,30 +111,45 @@ def main(num_rounds, c, local_epochs, batch_size, lr, device='cuda:0', parallel=
                 if avg_loss is not None:
                     total_loss += avg_loss * n
             train_acc = total_correct / total_samples if total_samples > 0 else 0.0
+            train_loss = total_loss / total_samples if total_samples > 0 else 0.0
             train_acc_list.append(train_acc)
+            train_loss_list.append(train_loss)
 
         # Print out train & val accuracy every 50 rounds
         if r % 50 == 0 or r == 1:
-            print(f"[Round {r}] Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f}")
+            print(f"[Round {r}] Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f} | Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
     # Evaluate on test set
     test_acc, _, _, _ = server.evaluate(test_loader)
     print(f"Test Accuracy: {test_acc:.4f}")
 
     # Build plot to show training/validation accuracy
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(10,8))
 
     # Define x_axis based on logging interval
     logging_interval = 10 
     x_axis = x_axis = [i * logging_interval - (logging_interval - 1) for i in range(1, len(train_acc_list)+1)]
 
-    plt.plot(x_axis, train_acc_list, label='Train Accuracy')
-    plt.plot(x_axis, val_acc_list, label='Validation Accuracy')
-    plt.xlabel("Communication Round")
-    plt.ylabel("Accuracy")
-    plt.title("FedAvg Training vs Validation Accuracy")
-    plt.legend()
-    plt.grid(True)
+    _, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+
+    # Plot Accuracy on the top subplot
+    ax1.plot(x_axis, train_acc_list, label='Train Accuracy', color='blue')
+    ax1.plot(x_axis, val_acc_list, label='Validation Accuracy', color='orange')
+    ax1.set_ylabel("Accuracy")
+    ax1.set_title("FedAvg Performance: Accuracy")
+    ax1.legend()
+    ax1.grid(True)
+
+    # Plot Loss on the bottom subplot
+    ax2.plot(x_axis, train_loss_list, label='Train Loss', color='blue', linestyle='--')
+    ax2.plot(x_axis, val_loss_list, label='Validation Loss', color='orange', linestyle='--')
+    ax2.set_ylabel("Loss")
+    ax2.set_xlabel("Communication Round")
+    ax2.set_title("FedAvg Performance: Loss")
+    ax2.legend()
+    ax2.grid(True)
+
+    plt.tight_layout() 
 
     # Save plot with descriptive filename
     if parallel:
@@ -142,7 +161,7 @@ def main(num_rounds, c, local_epochs, batch_size, lr, device='cuda:0', parallel=
     plt.savefig(f"{prefix}.png")
     plt.close()
 
-    return test_acc
+    return test_acc, train_acc_list[-1]
 
 
 if __name__ == "__main__":
