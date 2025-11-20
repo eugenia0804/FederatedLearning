@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import argparse
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import matplotlib.pyplot as plt
@@ -146,19 +147,31 @@ def main(num_rounds, c, local_epochs, batch_size, lr, device='cuda:0', parallel=
 
 if __name__ == "__main__":
 
-    parallel=True
-    server_device = 'cuda:3'
-    num_rounds = 800
-    c = 0.1
-    local_epochs = 10
-    batch_size = 64
-    lr = 5e-3
-    noise_level = 0.0
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--parallel", action="store_true",
+                        help="Enable parallel execution with Ray")
+    parser.add_argument("--server_device", type=str, default="cuda:0",
+                        help="Device for server aggregation")
+    parser.add_argument("--num_rounds", type=int, default=800,
+                        help="Number of global FL rounds")
+    parser.add_argument("--c", type=float, default=0.1,
+                        help="Client sampling percentage (0–1)")
+    parser.add_argument("--local_epochs", type=int, default=10,
+                        help="Number of client local epochs")
+    parser.add_argument("--batch_size", type=int, default=64,
+                        help="Client batch size")
+    parser.add_argument("--lr", type=float, default=5e-3,
+                        help="Learning rate")
+    parser.add_argument("--noise_level", type=float, default=0.0,
+                        help="Noise level for differential privacy")
 
-    main(num_rounds=num_rounds,
-         c=c,
-         local_epochs=local_epochs,
-         batch_size=batch_size,
-         lr=lr, device=server_device,
-         parallel=parallel,
-         noise_level=noise_level)
+    args = parser.parse_args()
+
+    main(num_rounds=args.num_rounds,
+         c=args.c,
+         local_epochs=args.local_epochs,
+         batch_size=args.batch_size,
+         lr=args.lr, 
+         device=args.server_device,
+         parallel=args.parallel,
+         noise_level=args.noise_level)
